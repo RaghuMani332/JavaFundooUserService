@@ -20,4 +20,6 @@ public interface UserService {
 
 	ResponseEntity<ResponceStructure<Boolean>> deleteUser(UUID id);
 
+	ResponseEntity<ResponceStructure<UserResponse>> login(String userName, String password);
+
 }
