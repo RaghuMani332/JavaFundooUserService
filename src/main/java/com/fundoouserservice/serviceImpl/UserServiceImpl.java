@@ -3,15 +3,22 @@ package com.fundoouserservice.serviceImpl;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.fundoouserservice.dao.UserDao;
 import com.fundoouserservice.entity.User;
 import com.fundoouserservice.exception.DuplicateEntryException;
 import com.fundoouserservice.exception.UserNotFoundException;
+import com.fundoouserservice.jwtservices.JWTService;
 import com.fundoouserservice.requestdto.UserRequest;
 import com.fundoouserservice.responcedto.UserResponse;
 import com.fundoouserservice.service.UserService;
@@ -25,6 +32,15 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private UserDao dao;
+	
+//	@Autowired
+//	private AuthenticationManager manager; 
+	
+	@Autowired
+	private JWTService jwtService;
+	
+	 @Value("${application.jwt.access_expiry_seconds}")
+	 private long accessExpirySeconds;
 	
 	@Override
 	public ResponseEntity<ResponceStructure<UserResponse>> addUser(UserRequest request) {
@@ -100,6 +116,45 @@ public class UserServiceImpl implements UserService {
 		return new ResponseEntity<ResponceStructure<T>>(structure,status);
 		
 		
+	}
+
+	@Override
+	public ResponseEntity<ResponceStructure<UserResponse>> login(String email, String password) {
+//		Authentication auth = manager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+		User user = dao.findByEmail(email).get();
+		 HttpHeaders httpHeaders = new HttpHeaders();
+//		if(auth.isAuthenticated())
+//		{
+			 String token = jwtService.generateToken(user,accessExpirySeconds*1000); //1hour in ms
+			 httpHeaders.add(HttpHeaders.SET_COOKIE, generateCookie("at", token,accessExpirySeconds*1000));
+//		}
+	
+		return ResponseEntity.status(HttpStatus.OK)
+						.headers(httpHeaders)
+						.body(ResponceStructure.<UserResponse>builder()
+								.data(mapToUserResponse(user))
+								.message("user logged in")
+								.status(HttpStatus.OK.value())
+								.build()
+								);
+						
+		
+//		ResponseEntity<ResponceStructure<UserResponse>> responce = mapToResponseEntity(mapToUserResponse(user), "user found", HttpStatus.OK);
+//		responce.getHeaders().
+							
+		
+	}
+
+	private String generateCookie(String name, String token, long age) {
+		return ResponseCookie.from(name,token)
+							.httpOnly(true)
+							.domain("localhost")
+							.secure(false)
+							.path("/")
+							.maxAge(age)
+							.sameSite("Lax")
+							.build()
+							.toString();
 	}
 
 }

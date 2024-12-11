@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fundoouserservice.requestdto.UserRequest;
@@ -33,10 +34,22 @@ public class UserController {
 	{
 		return service.addUser(request);
 	}
-	
+//	static int i=0;
 	@GetMapping("getuser/{id}")
 	public ResponseEntity<ResponceStructure<UserResponse>> getUserById(@PathVariable UUID id)
 	{
+//		if(i==3)
+//		{
+//			System.exit(3);
+//		}
+//		i++;
+//		try {
+//			Thread.sleep(10000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println(i);
 		return service.getUserById(id);
 	}
 	
@@ -52,6 +65,10 @@ public class UserController {
 		return service.deleteUser(id);
 	}
 
+	@PutMapping("login")
+	public ResponseEntity<ResponceStructure<UserResponse>> login(@RequestParam String userName, @RequestParam String password) {
+		return service.login(userName,password);
+	}
 	
 
 
